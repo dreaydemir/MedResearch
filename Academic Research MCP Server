@@ -1,0 +1,412 @@
+#!/usr/bin/env node
+
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
+import {
+  CallToolRequestSchema,
+  ErrorCode,
+  ListToolsRequestSchema,
+  McpError,
+} from '@modelcontextprotocol/sdk/types.js';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
+
+interface Article {
+  title: string;
+  authors: string[];
+  journal: string;
+  year: number;
+  doi?: string;
+  citations: number;
+  abstract?: string;
+  url?: string;
+}
+
+interface AuthorStats {
+  name: string;
+  publicationCount: number;
+  topArticles: Article[];
+}
+
+interface ResearchResult {
+  topArticles: Article[];
+  topAuthors: AuthorStats[];
+  summary: string;
+}
+
+class AcademicResearchServer {
+  private server: Server;
+
+  constructor() {
+    this.server = new Server(
+      {
+        name: 'academic-research-server',
+        version: '1.0.0',
+      },
+      {
+        capabilities: {
+          tools: {},
+        },
+      }
+    );
+
+    this.setupToolHandlers();
+  }
+
+  private setupToolHandlers() {
+    this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+      tools: [
+        {
+          name: 'search_academic_literature',
+          description: 'PubMed, Google Scholar ve Semantic Scholar üzerinde akademik literatür araştırması yapar',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: {
+                type: 'string',
+                description: 'Araştırma konusu (Türkçe veya İngilizce)',
+              },
+              years: {
+                type: 'number',
+                description: 'Kaç yıl geriye gidileceği (varsayılan: 20)',
+                default: 20,
+              },
+              max_results: {
+                type: 'number',
+                description: 'Maksimum sonuç sayısı (varsayılan: 20)',
+                default: 20,
+              },
+            },
+            required: ['query'],
+          },
+        },
+      ],
+    }));
+
+    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      if (request.params.name === 'search_academic_literature') {
+        return await this.searchAcademicLiterature(request.params.arguments);
+      }
+      throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${request.params.name}`);
+    });
+  }
+
+  private async searchAcademicLiterature(args: any) {
+    const { query, years = 20, max_results = 20 } = args;
+    
+    try {
+      console.error(`Araştırma başlatılıyor: "${query}"`);
+      
+      // Paralel olarak farklı veritabanlarından veri çekme
+      const [pubmedResults, scholarResults, semanticResults] = await Promise.allSettled([
+        this.searchPubMed(query, years, max_results),
+        this.searchGoogleScholar(query, years, max_results),
+        this.searchSemanticScholar(query, years, max_results),
+      ]);
+
+      // Sonuçları birleştir ve sırala
+      const allArticles = this.combineAndRankResults(
+        pubmedResults,
+        scholarResults,
+        semanticResults
+      );
+
+      // En çok atıf alan 20 makaleyi al
+      const topArticles = allArticles
+        .sort((a, b) => b.citations - a.citations)
+        .slice(0, max_results);
+
+      // Yazar istatistiklerini hesapla
+      const topAuthors = this.calculateAuthorStats(allArticles);
+
+      // Özet oluştur
+      const summary = this.generateSummary(topArticles, topAuthors, query);
+
+      const result: ResearchResult = {
+        topArticles,
+        topAuthors: topAuthors.slice(0, 5),
+        summary,
+      };
+
+      return {
+        content: [
+          {
+            type: 'text',
+            text: this.formatResults(result, query),
+          },
+        ],
+      };
+    } catch (error) {
+      console.error('Arama hatası:', error);
+      throw new McpError(
+        ErrorCode.InternalError,
+        `Araştırma sırasında hata oluştu: ${error instanceof Error ? error.message : 'Bilinmeyen hata'}`
+      );
+    }
+  }
+
+  private async searchPubMed(query: string, years: number, maxResults: number): Promise<Article[]> {
+    try {
+      const currentYear = new Date().getFullYear();
+      const startYear = currentYear - years;
+      
+      // PubMed API ile arama
+      const searchUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi`;
+      const searchParams = {
+        db: 'pubmed',
+        term: `${query} AND ${startYear}:${currentYear}[pdat]`,
+        retmax: maxResults,
+        retmode: 'json',
+        sort: 'relevance',
+      };
+
+      const searchResponse = await axios.get(searchUrl, { params: searchParams });
+      const pmids = searchResponse.data.esearchresult.idlist;
+
+      if (!pmids || pmids.length === 0) return [];
+
+      // Detay bilgileri al
+      const detailUrl = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi`;
+      const detailParams = {
+        db: 'pubmed',
+        id: pmids.join(','),
+        retmode: 'xml',
+      };
+
+      const detailResponse = await axios.get(detailUrl, { params: detailParams });
+      return this.parsePubMedXML(detailResponse.data);
+    } catch (error) {
+      console.error('PubMed arama hatası:', error);
+      return [];
+    }
+  }
+
+  private async searchGoogleScholar(query: string, years: number, maxResults: number): Promise<Article[]> {
+    // Google Scholar için serpapi veya başka bir servis kullanılabilir
+    // Bu örnek implementasyon simüle edilmiştir
+    try {
+      // Gerçek implementasyonda SerpAPI veya benzeri bir servis kullanılmalı
+      console.error('Google Scholar arama simüle ediliyor...');
+      return [];
+    } catch (error) {
+      console.error('Google Scholar arama hatası:', error);
+      return [];
+    }
+  }
+
+  private async searchSemanticScholar(query: string, years: number, maxResults: number): Promise<Article[]> {
+    try {
+      const currentYear = new Date().getFullYear();
+      const startYear = currentYear - years;
+      
+      const url = 'https://api.semanticscholar.org/graph/v1/paper/search';
+      const params = {
+        query: query,
+        year: `${startYear}-${currentYear}`,
+        limit: maxResults,
+        fields: 'title,authors,journal,year,citationCount,abstract,externalIds,url',
+      };
+
+      const response = await axios.get(url, { 
+        params,
+        headers: {
+          'User-Agent': 'Academic-Research-MCP/1.0',
+        },
+      });
+
+      return response.data.data.map((paper: any) => ({
+        title: paper.title,
+        authors: paper.authors?.map((author: any) => author.name) || [],
+        journal: paper.journal?.name || 'Bilinmeyen Dergi',
+        year: paper.year,
+        doi: paper.externalIds?.DOI,
+        citations: paper.citationCount || 0,
+        abstract: paper.abstract,
+        url: paper.url,
+      }));
+    } catch (error) {
+      console.error('Semantic Scholar arama hatası:', error);
+      return [];
+    }
+  }
+
+  private parsePubMedXML(xmlData: string): Article[] {
+    // XML parsing implementasyonu
+    // Bu basitleştirilmiş bir örnek
+    const articles: Article[] = [];
+    // Gerçek XML parsing burada yapılmalı
+    return articles;
+  }
+
+  private combineAndRankResults(
+    pubmedResults: PromiseSettledResult<Article[]>,
+    scholarResults: PromiseSettledResult<Article[]>,
+    semanticResults: PromiseSettledResult<Article[]>
+  ): Article[] {
+    const allArticles: Article[] = [];
+    
+    if (pubmedResults.status === 'fulfilled') {
+      allArticles.push(...pubmedResults.value);
+    }
+    if (scholarResults.status === 'fulfilled') {
+      allArticles.push(...scholarResults.value);
+    }
+    if (semanticResults.status === 'fulfilled') {
+      allArticles.push(...semanticResults.value);
+    }
+
+    // Duplikatları kaldır (DOI veya başlık bazında)
+    const uniqueArticles = allArticles.filter((article, index, arr) => {
+      return index === arr.findIndex(a => 
+        (a.doi && article.doi && a.doi === article.doi) ||
+        (a.title.toLowerCase() === article.title.toLowerCase())
+      );
+    });
+
+    return uniqueArticles;
+  }
+
+  private calculateAuthorStats(articles: Article[]): AuthorStats[] {
+    const authorMap = new Map<string, AuthorStats>();
+
+    articles.forEach(article => {
+      article.authors.forEach(authorName => {
+        if (!authorMap.has(authorName)) {
+          authorMap.set(authorName, {
+            name: authorName,
+            publicationCount: 0,
+            topArticles: [],
+          });
+        }
+        
+        const author = authorMap.get(authorName)!;
+        author.publicationCount++;
+        author.topArticles.push(article);
+      });
+    });
+
+    // Her yazar için en çok atıf alan 3 makaleyi seç
+    authorMap.forEach(author => {
+      author.topArticles = author.topArticles
+        .sort((a, b) => b.citations - a.citations)
+        .slice(0, 3);
+    });
+
+    return Array.from(authorMap.values())
+      .sort((a, b) => b.publicationCount - a.publicationCount);
+  }
+
+  private generateSummary(articles: Article[], authors: AuthorStats[], query: string): string {
+    const totalCitations = articles.reduce((sum, article) => sum + article.citations, 0);
+    const avgCitations = totalCitations / articles.length;
+    const yearRange = {
+      min: Math.min(...articles.map(a => a.year)),
+      max: Math.max(...articles.map(a => a.year)),
+    };
+
+    return `
+# ${query} Konusunda Akademik Literatür Araştırması Özeti
+
+Bu araştırmada "${query}" konusunda ${yearRange.min}-${yearRange.max} yılları arasında yayınlanan ${articles.length} makale incelenmiştir.
+
+## Ana Bulgular:
+- Toplam atıf sayısı: ${totalCitations}
+- Ortalama atıf sayısı: ${avgCitations.toFixed(2)}
+- En çok atıf alan makale: ${articles[0]?.citations || 0} atıf
+- En aktif yazarlar: ${authors.slice(0, 3).map(a => a.name).join(', ')}
+
+## Yayın Dağılımı:
+${this.getJournalDistribution(articles)}
+
+## Trend Analizi:
+${this.getTrendAnalysis(articles)}
+    `.trim();
+  }
+
+  private getJournalDistribution(articles: Article[]): string {
+    const journalCounts = new Map<string, number>();
+    articles.forEach(article => {
+      const journal = article.journal;
+      journalCounts.set(journal, (journalCounts.get(journal) || 0) + 1);
+    });
+
+    return Array.from(journalCounts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([journal, count]) => `- ${journal}: ${count} yayın`)
+      .join('\n');
+  }
+
+  private getTrendAnalysis(articles: Article[]): string {
+    const yearCounts = new Map<number, number>();
+    articles.forEach(article => {
+      yearCounts.set(article.year, (yearCounts.get(article.year) || 0) + 1);
+    });
+
+    const recentYears = Array.from(yearCounts.entries())
+      .sort((a, b) => b[0] - a[0])
+      .slice(0, 5);
+
+    return recentYears
+      .map(([year, count]) => `- ${year}: ${count} yayın`)
+      .join('\n');
+  }
+
+  private formatResults(result: ResearchResult, query: string): string {
+    let output = `# ${query} - Akademik Literatür Araştırması Sonuçları\n\n`;
+
+    // En çok atıf alan makaleler tablosu
+    output += '## En Çok Atıf Alan 20 Makale\n\n';
+    output += '| # | Başlık | Yazarlar | Dergi | Yıl | Atıf | DOI | APA Atıf |\n';
+    output += '|---|--------|----------|-------|-----|------|-----|----------|\n';
+
+    result.topArticles.forEach((article, index) => {
+      const authorsStr = article.authors.slice(0, 3).join(', ') + 
+        (article.authors.length > 3 ? ' et al.' : '');
+      const apaCitation = this.generateAPACitation(article);
+      
+      output += `| ${index + 1} | ${article.title} | ${authorsStr} | ${article.journal} | ${article.year} | ${article.citations} | ${article.doi || 'N/A'} | ${apacitation} |\n`;
+    });
+
+    // En aktif yazarlar tablosu
+    output += '\n## En Aktif Yazarlar ve En Çok Atıf Alan Yayınları\n\n';
+    output += '| Yazar | Yayın Sayısı | En Çok Atıf Alan 3 Yayın |\n';
+    output += '|-------|--------------|-------------------------|\n';
+
+    result.topAuthors.forEach(author => {
+      const topArticles = author.topArticles
+        .map(article => `${article.title} (${article.citations} atıf)`)
+        .join('<br>');
+      
+      output += `| ${author.name} | ${author.publicationCount} | ${topArticles} |\n`;
+    });
+
+    // Özet
+    output += '\n## Detaylı Özet\n\n';
+    output += result.summary;
+
+    return output;
+  }
+
+  private generateAPACitation(article: Article): string {
+    const authors = article.authors.length > 0 
+      ? article.authors.slice(0, 6).join(', ') + (article.authors.length > 6 ? ' et al.' : '')
+      : 'Unknown Author';
+    
+    const year = article.year;
+    const title = article.title;
+    const journal = article.journal;
+    const doi = article.doi ? ` https://doi.org/${article.doi}` : '';
+
+    return `${authors} (${year}). ${title}. *${journal}*.${doi}`;
+  }
+
+  async run() {
+    const transport = new StdioServerTransport();
+    await this.server.connect(transport);
+    console.error('Academic Research MCP Server başlatıldı');
+  }
+}
+
+const server = new AcademicResearchServer();
+server.run().catch(console.error);
