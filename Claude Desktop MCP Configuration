@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "academic-research": {
+      "command": "node",
+      "args": ["/path/to/your/academic-research-mcp-server/dist/index.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    }
+  }
+}
