@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "academic-research": {
+      "command": "node",
+      "args": ["/REPLACE/WITH/YOUR/PATH/academic-research-mcp-server/academic-server.js"],
+      "env": {
+        "NODE_ENV": "production"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/Users/YourName/Desktop",
+        "/Users/YourName/Downloads"
+      ]
+    }
+  }
+}
