@@ -1,99 +1,126 @@
-# Academic Research MCP Server - Kurulum ve Kullanım Kılavuzu
+# Academic Research MCP Server 🔬📚
 
-## Kurulum Adımları
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org/)
+[![MCP Compatible](https://img.shields.io/badge/MCP-Compatible-blue.svg)](https://modelcontextprotocol.io/)
 
-### 1. Proje Klasörü Oluşturma
+Claude Desktop için **akademik literatür araştırması** yapabilen Model Context Protocol (MCP) server'ı. PubMed, Google Scholar ve Semantic Scholar veritabanlarından en çok atıf alan makaleleri bulur, yazar analizleri yapar ve profesyonel raporlar oluşturur.
+
+## ✨ Özellikler
+
+### 🔍 **Kapsamlı Araştırma**
+- **Çoklu Veritabanı Desteği**: Semantic Scholar, PubMed (yakında)
+- **Makale Türü Filtreleme**: Sistematik derlemeler, meta-analizler, RCT'ler, klinik çalışmalar
+- **Zaman Aralığı**: Son 20 yıldaki yayınları tarama
+- **Atıf Bazlı Sıralama**: En etkili makaleleri öncelikle gösterme
+
+### 📊 **Detaylı Analiz ve Raporlama**
+- **En Çok Atıf Alan 20 Makale**: Tam bibliografik bilgilerle
+- **En Aktif 5 Yazar**: Yayın sayıları ve en etkili çalışmalarıyla
+- **APA Formatında Atıflar**: Akademik standartlarda referanslar
+- **İstatistiksel Özet**: Trend analizi, dergi dağılımı, atıf metrikleri
+
+### 🎯 **Kullanım Alanları**
+- Akademik literatür taraması
+- Sistematik derleme hazırlığı
+- Meta-analiz ön çalışması
+- Araştırma konusu keşfi
+- Yazar ve dergi analizi
+
+## 🚀 Hızlı Başlangıç
+
+### Önkoşullar
+- [Node.js](https://nodejs.org/) (v18 veya üstü)
+- [Claude Desktop](https://claude.ai/desktop)
+
+### Kurulum
+
+1. **Projeyi klonlayın**
 ```bash
-mkdir academic-research-mcp-server
+git clone https://github.com/KULLANICI_ADINIZ/academic-research-mcp-server.git
 cd academic-research-mcp-server
 ```
 
-### 2. Dosya Yapısını Oluşturma
-```
-academic-research-mcp-server/
-├── src/
-│   └── index.ts
-├── package.json
-├── tsconfig.json
-└── README.md
-```
-
-### 3. Bağımlılıkları Yükleme
+2. **Bağımlılıkları yükleyin**
 ```bash
 npm install
 ```
 
-### 4. TypeScript Derleme
+3. **Server'ı test edin**
 ```bash
-npm run build
+node academic-server.js
 ```
 
-### 5. Claude Desktop Yapılandırması
+4. **Claude Desktop'ı yapılandırın**
 
-#### Windows:
-`%APPDATA%\Claude\claude_desktop_config.json` dosyasını düzenleyin
+Config dosyasını açın:
+- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+- **Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-#### macOS:
-`~/Library/Application Support/Claude/claude_desktop_config.json` dosyasını düzenleyin
-
-#### Linux:
-`~/.config/Claude/claude_desktop_config.json` dosyasını düzenleyin
-
-Yapılandırma dosyasına aşağıdaki konfigürasyonu ekleyin:
-
+Şu konfigürasyonu ekleyin:
 ```json
 {
   "mcpServers": {
     "academic-research": {
       "command": "node",
-      "args": ["/tam/yol/academic-research-mcp-server/dist/index.js"],
-      "env": {
-        "NODE_ENV": "production"
-      }
+      "args": ["/TAM/YOL/academic-research-mcp-server/academic-server.js"]
     }
   }
 }
 ```
 
-**ÖNEMLİ:** `/tam/yol/` kısmını projenizin gerçek yolu ile değiştirin.
+5. **Claude Desktop'ı yeniden başlatın**
 
-### 6. Claude Desktop'ı Yeniden Başlatma
-Claude Desktop uygulamasını kapatıp tekrar açın.
+## 📖 Kullanım
 
-## Kullanım
-
-Claude Desktop'ta MCP server aktif olduktan sonra şu şekilde kullanabilirsiniz:
-
+### Temel Araştırma
 ```
-"Diabetes mellitus" konusunda akademik literatür araştırması yap. Son 15 yıldaki yayınları incele.
+"diabetes treatment" konusunda akademik literatür araştırması yap
 ```
 
-veya
+### Gelişmiş Sorgular
+```
+"machine learning healthcare" için son 10 yıldaki sistematik derlemeleri bul
+```
 
 ```
-search_academic_literature fonksiyonunu kullanarak "artificial intelligence in medicine" konusunda araştırma yap.
+"COVID-19 vaccine effectiveness" konusunda Q1 dergilerdeki yayınları araştır
 ```
 
-## Özellikler
+## 📋 Çıktı Örneği
 
-### 🔍 **Çoklu Veritabanı Desteği**
-- PubMed
-- Google Scholar (geliştirilecek)
-- Semantic Scholar
+### 1. En Çok Atıf Alan Makaleler Tablosu
+| # | Başlık | Yazarlar | Dergi | Yıl | Atıf | DOI |
+|---|--------|----------|-------|-----|------|-----|
+| 1 | Deep Learning in Medicine | Smith et al. | Nature Medicine | 2023 | 1,245 | 10.1038/... |
 
-### 📊 **Kapsamlı Analiz**
-- En çok atıf alan makaleler
-- Yazar istatistikleri
-- Dergi dağılımı
-- Trend analizi
+### 2. En Aktif Yazarlar Analizi
+| Yazar | Yayın Sayısı | Toplam Atıf | En Çok Atıf Alan Yayınlar |
+|-------|--------------|-------------|---------------------------|
+| Dr. John Smith | 15 | 2,340 | Paper 1 (456 atıf), Paper 2 (234 atıf)... |
 
-### 📋 **Profesyonel Raporlama**
-- APA formatında atıf
-- Tablo formatında sonuçlar
-- Detaylı özet
-- Exportable sonuçlar
+### 3. Detaylı İstatistiksel Özet
+- Toplam makale: 147
+- Ortalama atıf: 89.5
+- En aktif dergi: Nature Medicine (12 yayın)
+- Trend: 2020-2023 arası %45 artış
 
-### 🎯 **Makale Türü Filtreleme**
+## 🔧 Yapılandırma
+
+### API Ayarları
+```javascript
+// academic-server.js içinde
+const config = {
+  maxResults: 100,        // Maksimum sonuç sayısı
+  yearRange: 20,          // Geriye gidilecek yıl
+  timeout: 15000,         // API timeout (ms)
+  retryAttempts: 3        // Yeniden deneme sayısı
+};
+```
+
+### Makale Türü Filtreleri
+Server otomatik olarak şu türleri destekler:
 - Sistematik derlemeler
 - Meta-analizler
 - Randomize kontrollü çalışmalar
@@ -102,93 +129,115 @@ search_academic_literature fonksiyonunu kullanarak "artificial intelligence in m
 - Olgu serileri
 - Guidelines
 
-## API Özellikleri
-
-### search_academic_literature
-**Parametreler:**
-- `query` (string, zorunlu): Araştırma konusu
-- `years` (number, opsiyonel): Geriye gidilecek yıl sayısı (varsayılan: 20)
-- `max_results` (number, opsiyonel): Maksimum sonuç sayısı (varsayılan: 20)
-
-**Çıktı:**
-- En çok atıf alan makaleler tablosu
-- En aktif yazarlar ve yayınları
-- Detaylı literatür özeti
-- İstatistiksel analizler
-
-## Geliştirme ve Özelleştirme
+## 🛠️ Geliştirme
 
 ### Yeni Veritabanı Ekleme
-`searchGoogleScholar` fonksiyonunu geliştirerek SerpAPI entegrasyonu yapabilirsiniz:
+```javascript
+async function searchPubMed(query, years, maxResults) {
+  // PubMed API entegrasyonu
+}
 
-```typescript
-private async searchGoogleScholar(query: string, years: number, maxResults: number): Promise<Article[]> {
-  // SerpAPI entegrasyonu
-  const serpapi = require('google-search-results-nodejs');
-  const search = new serpapi.GoogleScholarSearch();
-  
-  // Implementation...
+async function searchGoogleScholar(query, years, maxResults) {
+  // Google Scholar entegrasyonu (SerpAPI ile)
 }
 ```
 
-### Makale Türü Filtreleme
-PubMed aramasına makale türü filtreleri ekleyebilirsiniz:
-
-```typescript
-const searchParams = {
-  db: 'pubmed',
-  term: `${query} AND ${startYear}:${currentYear}[pdat] AND (systematic review[pt] OR meta analysis[pt] OR randomized controlled trial[pt])`,
-  // ...
-};
+### Özel Filtreler
+```javascript
+function filterByJournalRank(articles, minRank) {
+  // Q1-Q4 dergi sıralaması filtresi
+}
 ```
 
-### Ek API Entegrasyonları
-- CrossRef API (DOI metadata)
-- arXiv API (preprint'ler için)
-- bioRxiv API (biyoloji preprint'leri)
+## 📊 API Referansı
 
-## Sorun Giderme
+### `search_academic_literature`
 
-### Common Issues
+**Parametreler:**
+- `query` (string, zorunlu): Araştırma konusu
+- `years` (number, opsiyonel): Geriye gidilecek yıl sayısı (varsayılan: 20)
+- `max_results` (number, opsiyonel): Maksimum sonuç sayısı (varsayılan: 100)
 
-1. **MCP Server Görünmüyor**
-   - Claude Desktop config dosyasının doğru yolda olduğundan emin olun
-   - JSON formatının geçerli olduğunu kontrol edin
-   - Claude Desktop'ı yeniden başlatın
+**Çıktı:**
+- En çok atıf alan 20 makale tablosu
+- En aktif 5 yazar analizi
+- Detaylı istatistiksel özet
+- APA formatında atıflar
 
-2. **API Rate Limiting**
-   - PubMed: saniyede 3 request
-   - Semantic Scholar: dakikada 100 request
-   - Gerekirse delay ekleyin
+## 🔄 Güncellemeler ve Versiyonlar
 
-3. **Dependency Errors**
-   - `npm install` komutunu tekrar çalıştırın
-   - Node.js versiyonunun 18+ olduğundan emin olun
+### v1.0.0 (Mevcut)
+- ✅ Semantic Scholar API entegrasyonu
+- ✅ En çok atıf alan makale listesi
+- ✅ Yazar analizi
+- ✅ APA formatında atıflar
+- ✅ İstatistiksel özet
 
-### Debug Modu
-```bash
-NODE_ENV=development npm run dev
-```
+### v1.1.0 (Planlanıyor)
+- 🔄 PubMed API entegrasyonu
+- 🔄 Google Scholar desteği
+- 🔄 Q1-Q4 dergi filtreleri
+- 🔄 Excel export özelliği
 
-## Güvenlik ve Etik Kullanım
+### v1.2.0 (Gelecek)
+- 🔄 Görselleştirme grafikleri
+- 🔄 Atıf ağı analizi
+- 🔄 Trend prediksiyon
+- 🔄 Multi-language desteği
 
-- API rate limitlerini respekt edin
-- Academic fair use kurallarına uyun
-- Elde edilen verilerin telif haklarını gözetin
-- Kişisel verileri (varsa) koruyun
-
-## Katkıda Bulunma
+## 🤝 Katkıda Bulunma
 
 1. Fork yapın
 2. Feature branch oluşturun (`git checkout -b feature/yeni-ozellik`)
-3. Commit yapın (`git commit -am 'Yeni özellik eklendi'`)
-4. Push yapın (`git push origin feature/yeni-ozellik`)
+3. Değişikliklerinizi commit edin (`git commit -am 'Yeni özellik eklendi'`)
+4. Branch'i push edin (`git push origin feature/yeni-ozellik`)
 5. Pull Request oluşturun
 
-## Lisans
+## 🐛 Sorun Giderme
 
-MIT License - Detaylar için LICENSE dosyasına bakın.
+### Yaygın Sorunlar
 
-## İletişim
+**Problem**: MCP server görünmüyor
+```bash
+# Çözüm: Config dosyası kontrolü
+cat ~/.config/Claude/claude_desktop_config.json
+```
 
-Sorularınız için GitHub issues kullanın veya email ile iletişime geçin.
+**Problem**: API rate limiting
+```bash
+# Çözüm: Timeout artırma
+# academic-server.js'te timeout değerini yükseltin
+```
+
+**Problem**: Boş sonuçlar
+```bash
+# Çözüm: Sorgu terimlerini İngilizce deneyin
+# Örnek: "diyabet tedavisi" yerine "diabetes treatment"
+```
+
+### Debug Modu
+```bash
+NODE_ENV=development node academic-server.js
+```
+
+## 📄 Lisans
+
+Bu proje [MIT Lisansı](LICENSE) altında lisanslanmıştır.
+
+## 🙏 Teşekkürler
+
+- [Semantic Scholar](https://www.semanticscholar.org/) - Ücretsiz API desteği
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP framework
+- [Claude Desktop](https://claude.ai/desktop) - Platform desteği
+
+## 📞 İletişim
+
+- GitHub Issues: Teknik sorular ve öneriler
+- Email: [your-email@domain.com]
+- Twitter: [@your-handle]
+
+---
+
+**⭐ Bu projeyi beğendiyseniz yıldız vermeyi unutmayın!**
+
+> *"Academic research made simple with AI-powered literature discovery"*
