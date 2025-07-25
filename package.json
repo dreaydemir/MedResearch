@@ -1,33 +1,50 @@
 {
   "name": "academic-research-mcp-server",
   "version": "1.0.0",
-  "description": "Akademik literatür araştırması için MCP server",
-  "main": "dist/index.js",
+  "description": "Claude Desktop için akademik literatür araştırması yapabilen MCP server. En çok atıf alan makaleleri bulur ve detaylı analiz raporları oluşturur.",
+  "main": "academic-server.js",
   "type": "module",
   "scripts": {
-    "build": "tsc",
-    "start": "node dist/index.js",
-    "dev": "tsx src/index.ts"
-  },
-  "dependencies": {
-    "@modelcontextprotocol/sdk": "^0.5.0",
-    "axios": "^1.6.0",
-    "cheerio": "^1.0.0-rc.12",
-    "xml2js": "^0.6.2"
-  },
-  "devDependencies": {
-    "@types/node": "^20.0.0",
-    "@types/xml2js": "^0.4.14",
-    "typescript": "^5.0.0",
-    "tsx": "^4.0.0"
+    "start": "node academic-server.js",
+    "dev": "NODE_ENV=development node academic-server.js",
+    "test": "node academic-server.js --test"
   },
   "keywords": [
     "mcp",
     "academic",
     "research",
+    "literature",
+    "citation",
+    "semantic-scholar",
     "pubmed",
-    "scholar"
+    "claude-desktop",
+    "ai",
+    "bibliography"
   ],
-  "author": "Your Name",
-  "license": "MIT"
+  "author": {
+    "name": "Your Name",
+    "email": "your-email@domain.com",
+    "url": "https://github.com/yourusername"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/academic-research-mcp-server.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/academic-research-mcp-server/issues"
+  },
+  "homepage": "https://github.com/yourusername/academic-research-mcp-server#readme",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.5.0",
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32"
+  ]
 }
